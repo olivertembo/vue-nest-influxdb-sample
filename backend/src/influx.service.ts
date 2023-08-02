@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { InfluxDB, IPoint } from 'influx';
+import { InfluxDB, IPoint, IResults } from 'influx';
 
 @Injectable()
 export class InfluxService {
@@ -22,5 +22,22 @@ export class InfluxService {
     ];
 
     await this.influx.writePoints(dataPoints);
+  }
+
+  async getDataByDateRange(
+    measurement: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<IResults<any>> {
+    let query = `SELECT * FROM ${measurement}`;
+    if (startDate && endDate) {
+      query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
+    } else if (startDate) {
+      query += ` WHERE time >= '${startDate.toISOString()}'`;
+    } else if (endDate) {
+      query += ` WHERE time <= '${endDate.toISOString()}'`;
+    }
+
+    return this.influx.query(query);
   }
 }
