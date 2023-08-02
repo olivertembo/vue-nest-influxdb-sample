@@ -1,14 +1,24 @@
-import { Controller, Get, Query, HttpStatus, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  HttpStatus,
+  HttpCode,
+  UseGuards,
+} from '@nestjs/common';
 import { InfluxService } from './influx.service';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from './auth/auth.guard';
+import * as moment from 'moment';
 import { IResults } from 'influx';
 
-@ApiTags('data')
+@ApiTags('Voltage/Power')
 @Controller('data')
 export class InfluxController {
   constructor(private readonly influxService: InfluxService) {}
 
-  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT')
+  @UseGuards(AuthGuard)
   @Get('seed')
   @ApiResponse({
     status: 200,
@@ -20,18 +30,19 @@ export class InfluxController {
     return { message: 'Dummy data seeded successfully.' };
   }
 
-  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT')
+  @UseGuards(AuthGuard)
   @Get('time-series')
   @ApiResponse({
     status: 200,
     description: 'Success',
-    type: Object, // Define the response type based on your data model
+    type: Object,
   })
   async getDataByDateRange(
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const measurement = 'your_measurement_name'; // Replace with the actual measurement name
+    const measurement = 'voltage';
     const startDate = from ? new Date(from) : undefined;
     const endDate = to ? new Date(to) : undefined;
     return this.influxService.getDataByDateRange(

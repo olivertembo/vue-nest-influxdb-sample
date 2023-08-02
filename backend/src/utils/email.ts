@@ -12,9 +12,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const EMAIL_SENDER = process.env.EMAIL_SENDER || 'noreply@liftlabs.com';
+export const EMAIL_SENDER = process.env.EMAIL_SENDER || 'noreply@TestApp.com';
 
-export const APP_NAME = process.env.APP_NAME || 'LiftLabs';
+export const APP_NAME = process.env.APP_NAME || 'TestApp';
 
 type EmailBody = {
   from: { name: string; address: string };

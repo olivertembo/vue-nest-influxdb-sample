@@ -13,7 +13,7 @@ export enum UserRole {
 @Entity()
 export class User extends BaseEntity {
   @ApiProperty()
-  @Column({ default: false })
+  @Column({ default: true })
   is_verified: boolean;
 
   // hashed

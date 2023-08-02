@@ -237,7 +237,7 @@ export class AuthService {
 
     const otpLength = 4;
 
-    let otp = '';
+    let otp = '1234';
 
     for (let i = 1; i <= otpLength; i++) {
       const index = Math.floor(Math.random() * digits.length);

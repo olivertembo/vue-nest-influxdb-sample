@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InfluxDB, IPoint, IResults } from 'influx';
 
 @Injectable()
@@ -30,13 +30,15 @@ export class InfluxService {
     endDate?: Date,
   ): Promise<IResults<any>> {
     let query = `SELECT * FROM ${measurement}`;
-    if (startDate && endDate) {
-      query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
-    } else if (startDate) {
-      query += ` WHERE time >= '${startDate.toISOString()}'`;
-    } else if (endDate) {
-      query += ` WHERE time <= '${endDate.toISOString()}'`;
+
+    return this.influx.query(query);
+
+    if (!startDate || !endDate) {
+      startDate = new Date('2020-08-01T00:00:00Z');
+      endDate = new Date('2023-08-02T00:00:00Z');
     }
+
+    query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
 
     return this.influx.query(query);
   }
