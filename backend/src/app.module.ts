@@ -7,10 +7,17 @@ import { AuthGuard } from './auth/auth.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import ormConfig from 'ormconfig';
 import { AllModule } from './modules';
+import { InfluxModule } from '../src/influx.module';
+import { InfluxController } from './influx.controller';
 
 @Module({
-  imports: [AuthModule, AllModule, TypeOrmModule.forRoot(ormConfig)],
-  controllers: [AppController],
+  imports: [
+    AuthModule,
+    AllModule,
+    TypeOrmModule.forRoot(ormConfig),
+    InfluxModule,
+  ],
+  controllers: [AppController, InfluxController],
   providers: [
     AppService,
     {

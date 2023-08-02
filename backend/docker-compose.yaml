@@ -16,6 +16,19 @@ services:
     restart: always
     ports:
       - '8080:8080'
+  
+  influxdb:
+    image: influxdb
+    restart: always
+    environment:
+      INFLUXDB_DB: monitoringDB
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: adminpassword
+    ports:
+      - '8086:8086'
+    volumes:
+      - influxdb:/var/lib/influxdb
 
 volumes:
   postgresql:
+  influxdb:
