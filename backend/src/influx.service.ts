@@ -1,45 +1,37 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
-import { InfluxDB, IPoint, IResults } from 'influx';
+import { Injectable } from '@nestjs/common';
+import { InfluxDB, WriteApi } from '@influxdata/influxdb-client';
 
 @Injectable()
 export class InfluxService {
-  constructor(@Inject('INFLUXDB') private readonly influx: InfluxDB) {}
+  private client: InfluxDB;
 
-  async seedDummyData() {
-    const dataPoints: IPoint[] = [
-      {
-        measurement: 'temperature',
-        tags: { device: 'device1' },
-        fields: { value: 23.5 },
-        timestamp: new Date().getTime() * 1000000, // InfluxDB expects timestamps in nanoseconds
-      },
-      {
-        measurement: 'temperature',
-        tags: { device: 'device2' },
-        fields: { value: 25.0 },
-        timestamp: (new Date().getTime() + 1000) * 1000000,
-      },
-    ];
-
-    await this.influx.writePoints(dataPoints);
+  constructor() {
+    const token =
+      process.env.INFLUXDB_TOKEN ||
+      'XWWMQnTM-mHdhnWAwmLn-awX5ESDz4lho_Wr7TEIGJETZmFdjvkox1TpCUFfa3ZSkKYbGDgLQbThfymhyRg8SQ==';
+    const url = 'http://localhost:8086';
+    this.client = new InfluxDB({ url, token });
   }
 
-  async getDataByDateRange(
-    measurement: string,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<IResults<any>> {
-    let query = `SELECT * FROM ${measurement}`;
+  getWriteClient(): WriteApi {
+    return this.client.getWriteApi('monitoring', 'monitoringDB', 'ns');
+  }
 
-    return this.influx.query(query);
-
-    if (!startDate || !endDate) {
-      startDate = new Date('2020-08-01T00:00:00Z');
-      endDate = new Date('2023-08-02T00:00:00Z');
-    }
-
-    query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
-
-    return this.influx.query(query);
+  async query(query: string): Promise<any> {
+    const queryApi = this.client.getQueryApi('monitoring');
+    const result = await queryApi.queryRows(query, {
+      next(row: string[], tableMeta: any) {
+        const o = tableMeta.toObject(row);
+        console.log(JSON.stringify(o, null, 2));
+      },
+      error(error: Error) {
+        console.error(error);
+        console.log('\nFinished ERROR');
+      },
+      complete() {
+        console.log('\nFinished SUCCESS');
+      },
+    });
+    return result;
   }
 }
