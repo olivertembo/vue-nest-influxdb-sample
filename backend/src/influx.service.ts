@@ -1,9 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { InfluxDB, WriteApi } from '@influxdata/influxdb-client';
+import {
+  InfluxDB,
+  WriteApi,
+  FluxTableMetaData,
+  FluxResultObserver,
+} from '@influxdata/influxdb-client';
+
+interface CustomFluxResultObserver {
+  next(row: string[], tableMeta: FluxTableMetaData): void;
+  error(error: Error): void;
+  complete(): void;
+}
 
 @Injectable()
 export class InfluxService {
-  private client: InfluxDB;
+  public client: InfluxDB;
 
   constructor() {
     const token =
@@ -17,21 +28,57 @@ export class InfluxService {
     return this.client.getWriteApi('monitoring', 'monitoringDB', 'ns');
   }
 
-  async query(query: string): Promise<any> {
-    const queryApi = this.client.getQueryApi('monitoring');
-    const result = await queryApi.queryRows(query, {
-      next(row: string[], tableMeta: any) {
-        const o = tableMeta.toObject(row);
-        console.log(JSON.stringify(o, null, 2));
+  async query<T>(query: string): Promise<T[]> {
+    try {
+      return new Promise<T[]>((resolve, reject) => {
+        const result: T[] = [];
+
+        const fluxResultObserver: FluxResultObserver<string[]> = {
+          next(row: string[], tableMeta: FluxTableMetaData) {
+            result.push(row as unknown as T);
+          },
+          error(error: Error) {
+            console.error(error);
+            console.log('\nFinished ERROR');
+            reject(error);
+          },
+          complete() {
+            console.log('\nFinished SUCCESS');
+            resolve(result);
+          },
+        };
+
+        this.client
+          .getQueryApi('monitoring')
+          .queryRows(query, fluxResultObserver);
+      });
+    } catch (error) {
+      console.error('Error executing query:', error);
+      throw new Error('Failed to execute query');
+    }
+  }
+
+  async getSolarData(): Promise<any[]> {
+    const queryClient = this.client.getQueryApi('monitoring');
+    const fluxQuery = `from(bucket: "monitoringDB")
+     |> range(start: -60m)
+     |> filter(fn: (r) => r._measurement == "solar")`;
+
+    const query = queryClient.queryRows(fluxQuery, {
+      next: (row, tableMeta) => {
+        const tableObject = tableMeta.toObject(row);
+        console.log(tableObject);
       },
-      error(error: Error) {
-        console.error(error);
-        console.log('\nFinished ERROR');
+      error: (error) => {
+        console.error('\nError', error);
       },
-      complete() {
-        console.log('\nFinished SUCCESS');
+      complete: () => {
+        console.log('\nSuccess');
       },
     });
-    return result;
+
+    console.log(query);
+
+    return [];
   }
 }

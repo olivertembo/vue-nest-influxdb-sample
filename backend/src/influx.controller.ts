@@ -5,6 +5,7 @@ import {
   HttpStatus,
   HttpCode,
   UseGuards,
+  HttpException,
 } from '@nestjs/common';
 import { InfluxService } from './influx.service';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -93,13 +94,58 @@ export class InfluxController {
     let query = `SELECT * FROM ${measurement}`;
     query += ` WHERE time >= '${defaultStartDate.toISOString()}' AND time <= '${defaultEndDate.toISOString()}'`;
 
-    if (startDate && endDate) {
+    if (startDate && endDate && 0) {
       query = `SELECT * FROM ${measurement}`;
       query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
     }
 
-    const results: IResults<any> = await this.influxService.query(query);
+    const results = await this.influxService.query(query);
 
     return results;
+  }
+
+  @ApiBearerAuth('JWT')
+  @UseGuards(AuthGuard)
+  @Get('voltage')
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: Object,
+  })
+  async getAllVoltageData() {
+    const measurement = 'voltage';
+    const query = `SELECT * FROM ${measurement}`;
+
+    try {
+      const results: any[] = await this.influxService.query(query);
+      return results;
+    } catch (error) {
+      console.error('Error fetching data from InfluxDB:', error);
+      throw new HttpException(
+        'Failed to fetch data',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @ApiBearerAuth('JWT')
+  @UseGuards(AuthGuard)
+  @Get('solar')
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: Object,
+  })
+  async getSolarData() {
+    try {
+      const solarData = await this.influxService.getSolarData();
+      return solarData;
+    } catch (error) {
+      console.error('Error fetching solar data:', error);
+      throw new HttpException(
+        'Failed to fetch solar data',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
