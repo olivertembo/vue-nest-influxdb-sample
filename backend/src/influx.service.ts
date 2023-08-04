@@ -62,23 +62,28 @@ export class InfluxService {
     const queryClient = this.client.getQueryApi('monitoring');
     const fluxQuery = `from(bucket: "monitoringDB")
      |> range(start: -60m)
-     |> filter(fn: (r) => r._measurement == "solar")`;
+     |> filter(fn: (r) => r._measurement == "solar")
+     |> filter(fn: (r) => r["host"] == "device1")
+     |> filter(fn: (r) => r["_field"] == "voltage" or r["_field"] == "power")
+     `;
 
-    const query = queryClient.queryRows(fluxQuery, {
-      next: (row, tableMeta) => {
-        const tableObject = tableMeta.toObject(row);
-        console.log(tableObject);
-      },
-      error: (error) => {
-        console.error('\nError', error);
-      },
-      complete: () => {
-        console.log('\nSuccess');
-      },
+    return new Promise<any[]>((resolve, reject) => {
+      const results: any[] = [];
+
+      queryClient.queryRows(fluxQuery, {
+        next: (row, tableMeta) => {
+          const tableObject = tableMeta.toObject(row);
+          results.push(tableObject);
+        },
+        error: (error) => {
+          console.error('\nError', error);
+          reject(error);
+        },
+        complete: () => {
+          console.log('\nSuccess');
+          resolve(results);
+        },
+      });
     });
-
-    console.log(query);
-
-    return [];
   }
 }
