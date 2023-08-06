@@ -61,11 +61,11 @@ export default {
         const data = await response.json();
         if (response.ok) {
           if (data.access_token) {
-            console.log("Token", data);
-            localStorage.setItem('token', data.token);
+            console.log("Token", data.access_token);
+            localStorage.setItem('token', data.access_token);
 
-            localStorage.setItem('token', data.token);
-            store.dispatch('setAuthData', { token: data.token, user: data.user });
+            localStorage.setItem('token', data.access_token);
+            store.dispatch('setAuthData', { token: data.access_token, user: data.user });
     
             router.push({ name: 'dashboard' });
           }
