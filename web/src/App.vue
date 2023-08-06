@@ -11,9 +11,9 @@
       </template>
     </nav>
   </div>
-  <div>
+  <main>
     <RouterView />
-  </div>
+  </main>
 </template>
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router';
