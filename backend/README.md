@@ -9,7 +9,7 @@ yarn install
 ## Running Development
 
 1. Create .env file copy from .env.example
-2. Run Database
+2. Run Database and generate INFLUXDB_TOKEN and INFLUXDB_ORG
 ```base
 docker-compose up -d
 ```
