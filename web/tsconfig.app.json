@@ -5,6 +5,8 @@
   "compilerOptions": {
     "composite": true,
     "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

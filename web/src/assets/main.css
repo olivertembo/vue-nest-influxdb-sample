@@ -27,6 +27,7 @@ nav a {
   font-weight: bold;
   padding: 5px 10px;
   border-radius: 3px;
+  cursor: pointer;
 }
 
 nav a:first-child {

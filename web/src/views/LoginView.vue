@@ -29,7 +29,6 @@
 <script lang="ts">
 import { ref } from 'vue';
 import { useStore } from 'vuex';
-import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
@@ -61,12 +60,8 @@ export default {
         const data = await response.json();
         if (response.ok) {
           if (data.access_token) {
-            console.log("Token", data.access_token);
-            localStorage.setItem('token', data.access_token);
-
             localStorage.setItem('token', data.access_token);
             store.dispatch('setAuthData', { token: data.access_token, user: data.user });
-    
             router.push({ name: 'dashboard' });
           }
           status.value = 'success';
@@ -92,17 +87,18 @@ export default {
 
 <style>
 .home {
-  min-height: 100vh;
+  min-height: calc(100vh - 66px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-@media (min-width: 1024px) {
-  .home {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #D3D3D3;
+  padding: 30px;
+  border-radius: 5px;
 }
 .input-element {
   display: flex;
@@ -120,6 +116,7 @@ button {
   border: 1px solid #ccc;
   background-color: #eee;
   cursor: pointer;
+  width: 100%;
 }
 form {
   display: flex;

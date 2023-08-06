@@ -3,7 +3,7 @@
     <nav>
       <template v-if="isAuthenticated">
         <RouterLink to="/dashboard">Dashboard</RouterLink>
-        <button @click="handleLogout">Logout</button>
+        <a @click="handleLogout">Logout</a>
       </template>
       <template v-else>
         <RouterLink to="/">Login</RouterLink>
