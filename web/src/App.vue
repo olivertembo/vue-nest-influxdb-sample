@@ -33,23 +33,3 @@ const handleLogout = async () => {
   }
 };
 </script>
-<style scoped>
-nav {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 1rem;
-}
-
-nav a {
-  text-decoration: none;
-  color: #333;
-  font-weight: bold;
-  padding: 5px 10px;
-  border-radius: 3px;
-}
-
-nav a.router-link-active {
-  color: #000;
-}
-</style>
