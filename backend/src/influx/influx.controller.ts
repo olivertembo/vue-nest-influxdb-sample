@@ -1,16 +1,13 @@
 import {
   Controller,
   Get,
-  Query,
   HttpStatus,
-  HttpCode,
   UseGuards,
   HttpException,
 } from '@nestjs/common';
 import { InfluxService } from './influx.service';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from './auth/auth.guard';
-import { IResults } from 'influx';
+import { AuthGuard } from '../auth/auth.guard';
 import { Point, WriteApi } from '@influxdata/influxdb-client';
 
 @ApiTags('Voltage/Power')
@@ -72,57 +69,20 @@ export class InfluxController {
 
   @ApiBearerAuth('JWT')
   @UseGuards(AuthGuard)
-  @Get('time-series')
+  @Get('load')
   @ApiResponse({
     status: 200,
     description: 'Success',
     type: Object,
   })
-  async getDataByDateRange(
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
-    const defaultStartDate = new Date();
-    const defaultEndDate = new Date();
-
-    const measurement = 'solar,battery,load';
-    const startDate = from ? new Date(from) : undefined;
-    const endDate = to ? new Date(to) : undefined;
-
-    defaultStartDate.setDate(defaultStartDate.getDate() - 7);
-
-    let query = `SELECT * FROM ${measurement}`;
-    query += ` WHERE time >= '${defaultStartDate.toISOString()}' AND time <= '${defaultEndDate.toISOString()}'`;
-
-    if (startDate && endDate && 0) {
-      query = `SELECT * FROM ${measurement}`;
-      query += ` WHERE time >= '${startDate.toISOString()}' AND time <= '${endDate.toISOString()}'`;
-    }
-
-    const results = await this.influxService.query(query);
-
-    return results;
-  }
-
-  @ApiBearerAuth('JWT')
-  @UseGuards(AuthGuard)
-  @Get('voltage')
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: Object,
-  })
-  async getAllVoltageData() {
-    const measurement = 'voltage';
-    const query = `SELECT * FROM ${measurement}`;
-
+  async getLoadData() {
     try {
-      const results: any[] = await this.influxService.query(query);
-      return results;
+      const solarData = await this.influxService.getLoadData();
+      return solarData;
     } catch (error) {
-      console.error('Error fetching data from InfluxDB:', error);
+      console.error('Error fetching solar data:', error);
       throw new HttpException(
-        'Failed to fetch data',
+        'Failed to fetch solar data',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -3,9 +3,9 @@
     <div v-if="isLoading">
       Loading...
     </div>
-    <div class="chart" v-if="solarData && !isLoading">
+    <div class="chart" v-if="chartLoadData && !isLoading">
       <h4>Device 1</h4>
-      <Line :data="solarData" :options="chartOptions" />
+      <Line :data="chartLoadData" :options="chartOptions" />
     </div>
     <br />
     <div class="chart" v-if="solarData && !isLoading">
@@ -53,7 +53,7 @@ ChartJS.register(
 )
 
 const isLoading = ref(false);
-const chartData2 = ref<ChartData>({
+const chartLoadData = ref<ChartData>({
     labels: [],
     datasets: []
   });
@@ -82,7 +82,7 @@ onMounted(async () => {
   };
 
 
-    const response = await fetch('http://localhost:4000/api/data/solar', {
+    let response = await fetch('http://localhost:4000/api/data/solar', {
       method: 'GET',
       headers: headers,
     });
@@ -90,12 +90,28 @@ onMounted(async () => {
     if (!response.ok) {
       throw new Error('Failed to fetch data from the API.');
     }
-    const data = await response.json();
+    let data = await response.json();
 
     if (data.length > 0) {
-      chartData2.value = formatData(data);
       solarData.value = formatData(data);
     }
+
+    response = await fetch('http://localhost:4000/api/data/load', {
+      method: 'GET',
+      headers: headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data from the API.');
+    }
+
+    data = await response.json();
+
+    if (data.length > 0) {
+      chartLoadData.value = formatData(data);
+    }
+
+
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {

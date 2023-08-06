@@ -28,34 +28,33 @@ export class InfluxService {
     return this.client.getWriteApi('monitoring', 'monitoringDB', 'ns');
   }
 
-  async query<T>(query: string): Promise<T[]> {
-    try {
-      return new Promise<T[]>((resolve, reject) => {
-        const result: T[] = [];
+  async getLoadData(): Promise<any[]> {
+    const queryClient = this.client.getQueryApi('monitoring');
+    const fluxQuery = `from(bucket: "monitoringDB")
+     |> range(start: -60m)
+     |> filter(fn: (r) => r._measurement == "load")
+     |> filter(fn: (r) => r["host"] == "device3")
+     |> filter(fn: (r) => r["_field"] == "voltage" or r["_field"] == "power")
+     `;
 
-        const fluxResultObserver: FluxResultObserver<string[]> = {
-          next(row: string[], tableMeta: FluxTableMetaData) {
-            result.push(row as unknown as T);
-          },
-          error(error: Error) {
-            console.error(error);
-            console.log('\nFinished ERROR');
-            reject(error);
-          },
-          complete() {
-            console.log('\nFinished SUCCESS');
-            resolve(result);
-          },
-        };
+    return new Promise<any[]>((resolve, reject) => {
+      const results: any[] = [];
 
-        this.client
-          .getQueryApi('monitoring')
-          .queryRows(query, fluxResultObserver);
+      queryClient.queryRows(fluxQuery, {
+        next: (row, tableMeta) => {
+          const tableObject = tableMeta.toObject(row);
+          results.push(tableObject);
+        },
+        error: (error) => {
+          console.error('\nError', error);
+          reject(error);
+        },
+        complete: () => {
+          console.log('\nSuccess');
+          resolve(results);
+        },
       });
-    } catch (error) {
-      console.error('Error executing query:', error);
-      throw new Error('Failed to execute query');
-    }
+    });
   }
 
   async getSolarData(): Promise<any[]> {

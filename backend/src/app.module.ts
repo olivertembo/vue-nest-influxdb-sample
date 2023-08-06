@@ -7,9 +7,9 @@ import { AuthGuard } from './auth/auth.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import ormConfig from 'ormconfig';
 import { AllModule } from './modules';
-import { InfluxModule } from './influx.module';
-import { InfluxController } from './influx.controller';
-import { InfluxService } from './influx.service';
+import { InfluxModule } from './influx/influx.module';
+import { InfluxController } from './influx/influx.controller';
+import { InfluxService } from './influx/influx.service';
 
 @Module({
   imports: [
