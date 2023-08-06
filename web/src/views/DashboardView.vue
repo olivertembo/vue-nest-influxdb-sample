@@ -1,8 +1,16 @@
 <template>
   <div class="dashboard">
-    <h1>Dashboard</h1>
-    <div class="chart">
-      <Line :data="chartData" :options="chartOptions" />
+    <div v-if="isLoading">
+      Loading...
+    </div>
+    <div class="chart" v-if="solarData && !isLoading">
+      <h4>Device 1</h4>
+      <Line :data="solarData" :options="chartOptions" />
+    </div>
+    <br />
+    <div class="chart" v-if="solarData && !isLoading">
+      <h4>Device 2</h4>
+      <Line :data="solarData" :options="chartOptions" />
     </div>
   </div>
 </template>
@@ -18,8 +26,21 @@ import {
   Legend
 } from 'chart.js'
 import { Line } from 'vue-chartjs'
-import { useStore } from 'vuex';
-import { computed, onMounted } from 'vue';
+import store from '../store';
+import { formatData } from '../utils';
+import { computed, onMounted, ref } from 'vue';
+
+interface DataSet {
+  label: string;
+  backgroundColor: string;
+  data: number[];
+};
+
+interface ChartData {
+  labels: string[];
+  datasets: DataSet[];
+};
+
 
 ChartJS.register(
   CategoryScale,
@@ -31,38 +52,27 @@ ChartJS.register(
   Legend
 )
 
-
-let chartData = {
-  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-  datasets: [
-    {
-      label: 'Power',
-      backgroundColor: '#f87979',
-      data: [40, 39, 10, 40, 39, 80, 40]
-    },
-    {
-      label: 'Voltage',
-      backgroundColor: 'green',
-      data: [30, 29, 50, 60, 79, 80, 0]
-    }
-  ]
-}
+const isLoading = ref(false);
+const chartData2 = ref<ChartData>({
+    labels: [],
+    datasets: []
+  });
+const solarData = ref<ChartData>({
+    labels: [],
+    datasets: []
+  });
 
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false
 }
 
-
-const store = useStore();
-const user = computed(() => store.state.user);
 const accessToken = computed(() => store.state.token);
 
-console.log("Current user", user);
-console.log("Current token", accessToken);
-
 onMounted(async () => {
-  if (!accessToken.value) {
+  try {
+
+    if (!accessToken.value) {
     throw new Error('Access token not found in store.');
   }
 
@@ -71,8 +81,6 @@ onMounted(async () => {
     'Content-Type': 'application/json',
   };
 
-
-  try {
 
     const response = await fetch('http://localhost:4000/api/data/solar', {
       method: 'GET',
@@ -85,31 +93,13 @@ onMounted(async () => {
     const data = await response.json();
 
     if (data.length > 0) {
-      const newChartData = {
-        labels: data.map((item: any) => item._time), // Array of _time values
-        datasets: [
-          {
-            label: 'Power',
-            backgroundColor: '#f87979',
-            data: data
-              .filter((item: any) => item._field === 'power') // Filter data for power values
-              .map((item: any) => item._value), // Array of power values
-          },
-          {
-            label: 'Voltage',
-            backgroundColor: 'green',
-            data: data
-              .filter((item: any) => item._field === 'voltage') // Filter data for voltage values
-              .map((item: any) => item._value), // Array of voltage values
-          },
-        ],
-      };
-      chartData = newChartData;
-      console.log("New chart data", newChartData);
+      chartData2.value = formatData(data);
+      solarData.value = formatData(data);
     }
-    console.log("Data", data);
   } catch (error) {
     console.error('Error fetching data:', error);
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
@@ -122,5 +112,11 @@ onMounted(async () => {
   max-width: 700px;
   height: 500px;
   margin: auto;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+h4 {
+  text-align: center;
+  font-size: large;
 }
 </style>

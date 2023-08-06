@@ -29,6 +29,7 @@ const status = ref<string>('');
 
 const handleSubmit = async () => {
   if (!email.value || !password.value) {
+    status.value = 'Invalid email or password';
     return;
   }
 
